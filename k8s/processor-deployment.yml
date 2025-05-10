@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: data-processor
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: process-data
+  template:
+    metadata:
+      labels:
+        app: process-data
+    spec:
+      containers:
+        - name: processor
+          image: market-data-processor:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 7000
+          env:
+            - name: API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: data-api-secret
+                  key: api-key
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: aws-credentials
+                  key: aws_access_key_id
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: aws-credentials
+                  key: aws_secret_access_key
+            - name: AWS_REGION
+              value: "us-east-1"
+            - name: S3_BUCKET_NAME
+              value: "gifty-market-data"
+            - name: S3_OBJECT_PREFIX
+              value: "us"
+            - name: TICKER
+              value: "AAPL"
+            - name: SQS_QUEUE_URL
+              value: "https://sqs.us-east-1.amazonaws.com/835754295892/file-events"
